@@ -1,50 +1,52 @@
 import streamlit as st
+import firebase_admin
+from firebase_admin import credentials, firestore
 import folium
-from folium.plugins import MarkerCluster
-from streamlit_folium import folium_static
-import time
-from firebase_config import db
+from geopy.geocoders import Nominatim
 
-# Função para pegar as coordenadas mais recentes do Firestore
-def get_latest_coordinates():
-    # Acesso ao Firestore e leitura da coleção 'coordenadas'
-    coordenadas_ref = db.collection('coordenadas').order_by('timestamp', direction=firestore.Query.DESCENDING).limit(1)
-    coordenadas = coordenadas_ref.stream()
-    
-    for doc in coordenadas:
-        data = doc.to_dict()
-        latitude = data.get('latitude')
-        longitude = data.get('longitude')
-        timestamp = data.get('timestamp')
-        return latitude, longitude, timestamp
-    
-    return None, None, None  # Caso não haja dados
+# Inicializa o Firebase
+cred = credentials.Certificate("caminho/para/seu/arquivo-de-chaves.json")  # Substitua pelo caminho para o seu arquivo de chave JSON
+firebase_admin.initialize_app(cred)
 
-# Função para criar o mapa com as coordenadas
+# Conectando ao Firestore
+db = firestore.client()
+
+# Função para obter a coordenada mais recente do Firestore
+def get_last_location():
+    # Acessa o Firestore e obtém o documento com o ID 'lastLocation'
+    coordenadas_ref = db.collection("coordenadas").document("lastLocation")
+    doc = coordenadas_ref.get()
+
+    if doc.exists:
+        return doc.to_dict()
+    else:
+        return None
+
+# Função para criar o mapa
 def create_map(latitude, longitude):
-    # Criação do mapa centrado na primeira localização ou coordenadas médias
-    m = folium.Map(location=[latitude, longitude], zoom_start=14)
-    folium.Marker([latitude, longitude]).add_to(m)
-    return m
+    if latitude is not None and longitude is not None:
+        # Cria um mapa com folium centrado nas coordenadas
+        mapa = folium.Map(location=[latitude, longitude], zoom_start=15)
+        folium.Marker([latitude, longitude]).add_to(mapa)
+        return mapa
+    else:
+        return None
 
-# Função para exibir o mapa no Streamlit
-def display_map():
-    st.title('Localizações em Tempo Real')
+# Título da página
+st.title("Mapa de Localizações em Tempo Real")
 
-    while True:
-        latitude, longitude, timestamp = get_latest_coordinates()
-        
-        if latitude is not None and longitude is not None:
-            st.subheader(f'Última coordenada recebida: {latitude}, {longitude}')
-            
-            # Criação do mapa com a coordenada mais recente
-            m = create_map(latitude, longitude)
-            folium_static(m)
-        else:
-            st.subheader('Aguardando coordenadas...')
-            
-        # Atualiza a cada 5 segundos
-        time.sleep(5)
+# Obtém a coordenada mais recente do Firestore
+location = get_last_location()
 
-if __name__ == "__main__":
-    display_map()
+if location:
+    latitude = location.get('latitude')
+    longitude = location.get('longitude')
+
+    # Cria o mapa com a coordenada obtida
+    mapa = create_map(latitude, longitude)
+
+    if mapa:
+        # Exibe o mapa no Streamlit
+        st.map(mapa)
+else:
+    st.write("Nenhuma coordenada encontrada.")
