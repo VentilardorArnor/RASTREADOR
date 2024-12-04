@@ -3,7 +3,7 @@ import json
 import firebase_admin
 from firebase_admin import credentials, firestore
 
-# Função para conectar ao Firebase usando a variável de ambiente 'firebase_credentials'
+# Função para conectar ao Firebase
 def initialize_firebase():
     # Recuperar a chave 'firebase_credentials' diretamente das Secrets do Streamlit
     cred_dict = st.secrets["firebase_credentials"]
