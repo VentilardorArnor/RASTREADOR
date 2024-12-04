@@ -1,6 +1,20 @@
 import streamlit as st
-import folium
-from streamlit_folium import folium_static
+import json
+import os
+import firebase_admin
+from firebase_admin import credentials, firestore
+
+# Função para conectar com o Firebase
+def initialize_firebase():
+    # Carregar as credenciais do Firebase a partir da variável de ambiente
+    cred_json = os.getenv('firebase_credentials')
+    if not cred_json:
+        st.error("A variável de ambiente 'firebase_credentials' não foi configurada!")
+        st.stop()
+    
+    cred_dict = json.loads(cred_json)  # Converter a string JSON em dicionário
+    cred = credentials.Certificate(cred_dict)
+    firebase_admin.initialize_app(cred)
 
 # Função para criar o mapa
 def create_map():
