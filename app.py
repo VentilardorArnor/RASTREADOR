@@ -17,7 +17,7 @@ def create_map():
     return m
 
 # Criar o título para o Streamlit
-st.title("A bosta do circular")
+st.title("A Bosta do Circular")
 
 # Criar o mapa
 m = create_map()
