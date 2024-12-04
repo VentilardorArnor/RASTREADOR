@@ -5,9 +5,9 @@ from streamlit_folium import folium_static
 # Função para criar o mapa
 def create_map():
     # Coordenadas de exemplo (São Paulo)
-    latitude = -23.5505
-    longitude = -46.6333
-    
+    latitude = -1.4740785281198614
+    longitude = -48.45163997645187
+
     # Criar o mapa usando o OpenStreetMap como base
     m = folium.Map(location=[latitude, longitude], zoom_start=12)
 
