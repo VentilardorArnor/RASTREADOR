@@ -1,21 +1,25 @@
-import streamlit as st
 import json
 import os
 import firebase_admin
 from firebase_admin import credentials, firestore
+import streamlit as st
 
-# Função para conectar com o Firebase
+# Função para conectar ao Firebase
 def initialize_firebase():
-    # Carregar as credenciais do Firebase a partir da variável de ambiente
-    cred_json = os.getenv('firebase_credentials')
+    # Carregar as credenciais do Firebase a partir das variáveis de ambiente
+    cred_json = os.getenv('firebase_credentials')  # Obtém a variável 'firebase_credentials'
+    
     if not cred_json:
         st.error("A variável de ambiente 'firebase_credentials' não foi configurada!")
         st.stop()
     
-    cred_dict = json.loads(cred_json)  # Converter a string JSON em dicionário
+    # O TOML precisa ser convertido de volta para JSON
+    cred_dict = json.loads(cred_json)  # Converte a string JSON em dicionário
     cred = credentials.Certificate(cred_dict)
     firebase_admin.initialize_app(cred)
 
+# Inicializar o Firebase
+initialize_firebase()
 # Função para criar o mapa
 def create_map():
     # Coordenadas de exemplo (São Paulo)
