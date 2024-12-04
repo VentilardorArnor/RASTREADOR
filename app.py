@@ -1,12 +1,15 @@
 import streamlit as st
+import folium
+from streamlit_folium import folium_static
 import requests
 import json
+import time
 
 # URL da API REST do Firestore
 FIREBASE_PROJECT_ID = "banco-gps"  # Seu projeto no Firebase
 FIREBASE_API_URL = f"https://firestore.googleapis.com/v1/projects/{FIREBASE_PROJECT_ID}/databases/(default)/documents/"
 
-# Sua chave de API (não expor publicamente)
+# Sua chave de API
 API_KEY = "AIzaSyADYPBbiXNg9u_fUbSDs6KOU3S2GAypOwI"
 
 # Função para acessar o Firestore e obter coordenadas
@@ -26,17 +29,41 @@ def get_firestore_data():
         st.error(f"Erro ao acessar Firestore: {response.status_code}")
         return []
 
-# Exibe o título no Streamlit
-st.title("Exibindo Coordenadas do Firestore")
+# Função para criar o mapa com o ônibus em movimento
+def create_map_with_bus(latitude, longitude):
+    # Criar o mapa centrado na primeira coordenada do ônibus
+    m = folium.Map(location=[latitude, longitude], zoom_start=14)
 
-# Chama a função para obter as coordenadas do Firestore
-coordinates = get_firestore_data()
+    # Adicionar o marcador do ônibus no mapa
+    bus_marker = folium.Marker([latitude, longitude], popup="Ônibus", icon=folium.Icon(color="blue"))
+    bus_marker.add_to(m)
 
-# Exibe as coordenadas no mapa, se houver dados
-if coordinates:
-    for item in coordinates:
-        latitude = item['fields']['latitude']['doubleValue']
-        longitude = item['fields']['longitude']['doubleValue']
-        st.write(f"Coordenada: Latitude = {latitude}, Longitude = {longitude}")
-else:
-    st.warning("Nenhuma coordenada encontrada no Firestore.")
+    return m
+
+# Função para simular o movimento do ônibus
+def simulate_bus_movement():
+    # Exibe o título
+    st.title("Simulação de Movimento do Ônibus no OpenStreetMap")
+    
+    # Inicia a atualização
+    while True:
+        # Obtém as coordenadas mais recentes do Firestore
+        coordinates = get_firestore_data()
+        
+        if coordinates:
+            # Pegue a última coordenada
+            lat = coordinates[0]['fields']['latitude']['doubleValue']
+            lon = coordinates[0]['fields']['longitude']['doubleValue']
+            
+            # Crie e exiba o mapa atualizado
+            m = create_map_with_bus(lat, lon)
+            folium_static(m)
+            
+            # Aguarda 5 segundos antes de atualizar a posição (simula o movimento)
+            time.sleep(5)
+        else:
+            st.warning("Nenhuma coordenada encontrada no Firestore.")
+            break
+
+# Inicia a simulação do movimento do ônibus
+simulate_bus_movement()
