@@ -1,43 +1,42 @@
 import streamlit as st
+import requests
 import json
-import firebase_admin
-from firebase_admin import credentials, firestore
 
-# Função para conectar ao Firebase
-def initialize_firebase():
-    # Recuperar a chave 'firebase_credentials' diretamente das Secrets do Streamlit
-    cred_dict = st.secrets["firebase_credentials"]
+# URL da API REST do Firestore
+FIREBASE_PROJECT_ID = "banco-gps"  # Seu projeto no Firebase
+FIREBASE_API_URL = f"https://firestore.googleapis.com/v1/projects/{FIREBASE_PROJECT_ID}/databases/(default)/documents/"
 
-    if not cred_dict:
-        st.error("As credenciais do Firebase não estão configuradas nas Secrets!")
-        st.stop()
+# Sua chave de API (não expor publicamente)
+API_KEY = "AIzaSyADYPBbiXNg9u_fUbSDs6KOU3S2GAypOwI"
+
+# Função para acessar o Firestore e obter coordenadas
+def get_firestore_data():
+    # URL para acessar a coleção no Firestore
+    url = f"{FIREBASE_API_URL}coordenadas?key={API_KEY}"
     
-    # Inicializar o Firebase com as credenciais
-    cred = credentials.Certificate(cred_dict)
-    firebase_admin.initialize_app(cred)
+    # Fazer a requisição GET
+    response = requests.get(url)
+    
+    if response.status_code == 200:
+        # Sucesso, processa a resposta
+        data = response.json()
+        return data.get('documents', [])
+    else:
+        # Se houver erro, exibe a mensagem
+        st.error(f"Erro ao acessar Firestore: {response.status_code}")
+        return []
 
-# Inicializar o Firebase
-initialize_firebase()
+# Exibe o título no Streamlit
+st.title("Exibindo Coordenadas do Firestore")
 
-# Função para criar o mapa
-def create_map():
-    # Coordenadas de exemplo (São Paulo)
-    latitude = -1.4740785281198614
-    longitude = -48.45163997645187
+# Chama a função para obter as coordenadas do Firestore
+coordinates = get_firestore_data()
 
-    # Criar o mapa usando o OpenStreetMap como base
-    m = folium.Map(location=[latitude, longitude], zoom_start=12)
-
-    # Adicionar um marcador
-    folium.Marker([latitude, longitude], popup="São Paulo").add_to(m)
-
-    return m
-
-# Criar o título para o Streamlit
-st.title("A Bosta do Circular")
-
-# Criar o mapa
-m = create_map()
-
-# Exibir o mapa no Streamlit
-folium_static(m)
+# Exibe as coordenadas no mapa, se houver dados
+if coordinates:
+    for item in coordinates:
+        latitude = item['fields']['latitude']['doubleValue']
+        longitude = item['fields']['longitude']['doubleValue']
+        st.write(f"Coordenada: Latitude = {latitude}, Longitude = {longitude}")
+else:
+    st.warning("Nenhuma coordenada encontrada no Firestore.")
