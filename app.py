@@ -7,10 +7,10 @@ import time
 
 # URL da API REST do Firestore
 FIREBASE_PROJECT_ID = "banco-gps"  # Seu projeto no Firebase
-FIREBASE_API_URL = f"https://firestore.googleapis.com/v1/projects/{FIREBASE_PROJECT_ID}/databases/(default)/documents/"
+FIREBASE_API_URL = 
 
 # Sua chave de API
-API_KEY = "AIzaSyADYPBbiXNg9u_fUbSDs6KOU3S2GAypOwI"
+API_KEY = ""
 
 # Função para acessar o Firestore e obter coordenadas
 def get_firestore_data():
